@@ -13,9 +13,20 @@
 # USAGE
 #
 #   bash domainsearch.sh
-#   bash domainsearch.sh keywords.txt
-#   bash domainsearch.sh keywords.txt result.log
+#   bash domainsearch.sh -l result.log
+#   bash domainsearch.sh -k keywords.txt
+#   bash domainsearch.sh -t tldlist.txt
+#   bash domainsearch.sh -l result.log -l keywords.txt -t tldlist.txt
 # 
+#   bash domainsearch.sh -l ~/tmp/dresult.log -k ~/tmp/dwords.txt -t ~/tmp/dtldlist.txt
+#
+# EXAMPLE
+# 
+#   bash domainsearch.sh
+#   bash domainsearch.sh -l domainsearch-result.log
+#   bash domainsearch.sh -k domainsearch-keywords.txt
+#   bash domainsearch.sh -t domainsearch-tldlist.txt
+#   bash domainsearch.sh -l domainsearch-result.log -k domainsearch-keywords.txt -t domainsearch-tldlist.txt
 #
 
 
@@ -25,36 +36,36 @@ IFS=$'\n'
 # disable globbing
 set -f
 
-#Set the Keyword list file
-if [ $1 ]; then
-    keywordfile=${1}
-else
-    keywordfile="domainsearch-keywords.txt"
-fi
+#set default settins
+logfile="domainsearch-results.log"
+keywords=("example", "this-is-an-example")
+tldlist=("com" "org" "net" "eu")
+#tldlist=("de" "com" "org" "net" "eu" "co.uk" "uk" "at" "ch" "nl" "be" "lu" "it" "dk" "se" "no" "fi")
 
-#Set log file path
-if [ $2 ]; then
-    logfile=${2}
-else
-    logfile="domainsearch-results.log"
-fi
+#read input arguments
+while getopts 'l:k:t:' flag; do
+    case "${flag}" in
+        l) logfile="${OPTARG}";;   #Set log file path
+        k) read -d '' -r -a keywords < "${OPTARG}";;  #array from keyword list file
+        t) read -d '' -r -a tldlist < "${OPTARG}";;   #array from TLD list file
+    esac
+done
+
+
 #reset logs
 rm ${logfile}
 touch ${logfile}
 
-#TLDS festlegen
-#tldlist=("de" "com" "org" "net" "eu" "co.uk" "uk" "at" "ch" "nl" "be" "lu" "it" "dk" "se" "no" "fi")
-tldlist=("com" "org" "net" "eu" "co.uk")
 
-# jede Zeile durchgehen
-for word in $(cat "${keywordfile}"); do
+# loop over each keyword
+for word in "${keywords[@]}"; do
   
-    #konvertiere zu lower
+    #convert word to lower case
     word=$(echo ${word} | tr '[:upper:]' '[:lower:]');
 
     if [ "${word}" != "" ]; then
     
-        # alpha-numerisch, mit Umlaute, mit Bindestrich (ohne Whitespace/Sonstige)
+        #alpha-numeric, with German Umlaute, with Dash (without whitespaces, etc)
         adjname1=$(echo ${word} | tr -cd '[[:alnum:]äöü\-]');
         if [ "${adjname1}" != "" ]; then
             for tld in "${tldlist[@]}"; do 
@@ -64,7 +75,7 @@ for word in $(cat "${keywordfile}"); do
             done
         fi 
 
-        # alpha-numerisch, mit Umlaute, ohne Bindestrich (ohne Whitespace/Sonstige)
+        #alpha-numeric, with German Umlaute (without dash, whitespaces, etc)
         adjname2=$(echo ${word} | tr -cd '[[:alnum:]äöü]');
         if [[ "${adjname2}" != "" && "${adjname2}" != "${adjname1}" ]]; then
             for tld in "${tldlist[@]}"; do 
@@ -74,7 +85,7 @@ for word in $(cat "${keywordfile}"); do
             done
         fi
 
-        # alpha-numerisch, Diphtonge, mit Bindestrich (ohne Whitespace/Sonstige)
+        #alpha-numeric, with diphtonge instead of German Umlaute, with dash (without whitespaces, etc)
         adjname3=$(echo ${adjname1} | sed 's/ä/ae/' | sed 's/ö/oe/' | sed 's/ü/ue/');    
         if [[ "${adjname3}" != "" && "${adjname3}" != "${adjname1}" && "${adjname3}" != "${adjname2}" ]]; then
             for tld in "${tldlist[@]}"; do 
@@ -84,7 +95,7 @@ for word in $(cat "${keywordfile}"); do
             done
         fi
 
-        # alpha-numerisch, Diphtonge, ohne Bindestrich (ohne Whitespace/Sonstige)
+        #alpha-numeric, with diphtonge instead of German Umlaute (without dash, whitespaces, etc)
         adjname4=$(echo ${adjname2} | sed 's/ä/ae/' | sed 's/ö/oe/' | sed 's/ü/ue/');    
         if [[ "${adjname4}" != "" && "${adjname4}" != "${adjname1}" && "${adjname4}" != "${adjname2}" && "${adjname4}" != "${adjname3}" ]]; then
             for tld in "${tldlist[@]}"; do 
