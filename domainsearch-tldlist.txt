@@ -1,0 +1,16 @@
+com
+org
+net
+co.uk
+eu
+de
+at
+ch
+nl
+be
+lu
+it
+dk
+se
+no
+fi

@@ -1,6 +1,4 @@
 
-*.txt
-*.csv
-*.log
+output.csv
 nohup.out
 *.out
